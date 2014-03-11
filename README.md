@@ -1,4 +1,5 @@
 simpleRPClib
 ============
+a simple lib for rpc calls to dist system.
 
-simpleRPClib
+Mark Hethington - 20353505
