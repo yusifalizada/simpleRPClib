@@ -57,7 +57,7 @@ void copy_int(void* to, const int* from) {
 }
 
 
-unsigned long send_string(int socket, void* s, int to_send, PROTOCOL_TYPE type) {
+unsigned long send_string(int socket, void* s, unsigned long to_send, PROTOCOL_TYPE type) {
     int int_type = type;
     
     // send string length
@@ -106,7 +106,7 @@ rpc_protocol recv_string(int socket) {
     rpc_p.type = (PROTOCOL_TYPE)atoi(type);
     
     // recieve string
-    int toRecv = rpc_p.length;
+    unsigned long toRecv = rpc_p.length;
     unsigned long recved = 0;
     char buffer[toRecv];
     while (toRecv > 0) {

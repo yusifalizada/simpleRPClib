@@ -118,7 +118,7 @@ void printServerInfo(int sockfd) {
     printf("BINDER_PORT %d\n",get_client_port(&sin));
 }
 
-int startServer() {
+int serverStart() {
     
     int sockfd;  // listen on sock_fd, new connection on new_fd
     int rv;

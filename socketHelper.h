@@ -18,7 +18,7 @@ int connectToServer(const char* hostname, const char* port);
 void closeConnection(int sockfd);
 
 // starts server and returns sockfd
-int startServer();
+int serverStart();
 
 // listens on sockfd and performs function with passed in sock_fd
 void serverAcceptLoop(int sockfd, void (*f)(int));
