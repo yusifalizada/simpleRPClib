@@ -97,28 +97,33 @@ rpc_protocol recv_string(int socket) {
     return rpc_p;
 }
 
+
+rpc_register_protocol create_register_protocol(rpc_protocol rcp_p) {
+    rpc_register_protocol rpc_rp;
+    rpc_rp.type = rcp_p.type;
+    size_t start = 0;
+    size_t end = HOSTNAMESIZE;
+    rpc_rp.server_identifier = rcp_p.message.substr(start, end);
+    
+    start += end;
+    end = sizeof(int);
+    rpc_rp.port = atoi(rcp_p.message.substr(start,end).c_str());
+    
+    start += end;
+    end = rcp_p.message.find('\0',start);
+    rpc_rp.name = rcp_p.message.substr(start,end+1);
+    
+    start += end+1;
+    rpc_rp.argTypes = intdup((int*)rcp_p.message.substr(start).c_str(),start - rcp_p.message.length());
+    return rpc_rp;
+
+}
+
 rpc_base recv_protocol(int socket) {
     rpc_protocol rcp_p = recv_string(socket);
     switch (rcp_p.type) {
         case REGISTER:
-            rpc_register_protocol rpc_rp;
-            rpc_rp.type = rcp_p.type;
-            size_t start = 0;
-            size_t end = HOSTNAMESIZE;
-            rpc_rp.server_identifier = rcp_p.message.substr(start, end);
-            
-            start += end;
-            end = sizeof(int);
-            rpc_rp.port = atoi(rcp_p.message.substr(start,end).c_str()); //TODO: fix
-            
-            start += end;
-            end = rcp_p.message.find('\0',start);
-            rpc_rp.name = rcp_p.message.substr(start,end+1);
-            
-            start += end+1;
-            rpc_rp.argTypes = intdup((int*)rcp_p.message.substr(start).c_str(),start - rcp_p.message.length());
-            
-            break;
+            return create_register_protocol(rcp_p);
     }
     //TODO: handle error state
     rpc_base b;
