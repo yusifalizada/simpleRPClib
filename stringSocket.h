@@ -11,8 +11,9 @@
 
 #include <iostream>
 #include <string>
+#include "Constants.h"
 
-unsigned long sendString(int socket, std::string s);
-std::string recvString(int socket);
+unsigned long send_string(int socket, std::string s, PROTOCOL_TYPE type);
+rpc_protocol recv_string(int socket);
 
 #endif /* defined(__Client__stringSocket__) */
