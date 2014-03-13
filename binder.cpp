@@ -35,8 +35,8 @@ int main(int argc, char *argv[]) {
     rpc_protocol pp = compile_register_protocol(rpc);
     cout << get_protocol_string(pp.type) << " String: " << pp.message << endl;
     rpc_register_protocol second = create_register_protocol(pp);
+    cout << get_protocol_string(pp.type) << " String2: " << second.argTypes[3] << endl;
 
-    
     /* return */
     return 0;
 }

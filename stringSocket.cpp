@@ -40,9 +40,24 @@ int * intdup(int const * src, size_t len = -1)
     return p;
 }
 
+// copies int array
+void copy_int_array(void* to, const int* from) {
+    memcpy(to, from, get_intstar_length(from) * sizeof(int));
+}
 
-unsigned long send_string(int socket, string s, PROTOCOL_TYPE type) {
-    int to_send = (int)s.size();
+// copies char*
+void copy_string(void* to, const char* from) {
+    memcpy(to, from, strlen(from));
+}
+
+// copies int
+void copy_int(void* to, const int* from) {
+    *(int*)to = *from;
+    //memcpy(to, from, sizeof(int));
+}
+
+
+unsigned long send_string(int socket, void* s, int to_send, PROTOCOL_TYPE type) {
     int int_type = type;
     
     // send string length
@@ -55,9 +70,9 @@ unsigned long send_string(int socket, string s, PROTOCOL_TYPE type) {
     
     // send string
     unsigned long sent = 0;
-    const char * buffer = s.c_str();
+    const void * buffer = s;
     while (to_send > 0) {
-        long change = send(socket,buffer + sent,to_send,0);
+        long change = send(socket,(char*)buffer + sent,to_send,0);
         if (change == -1) return -1;
         sent += change;
         to_send -= change;
@@ -66,8 +81,7 @@ unsigned long send_string(int socket, string s, PROTOCOL_TYPE type) {
 }
 
 unsigned long send_protocol(int socket, rpc_protocol rpc_p){
-    // TODO: not converted to c_str yet
-    return send_string(socket, "",rpc_p.type);//(string)rpc_p.message, rpc_p.type);
+    return send_string(socket, rpc_p.message, rpc_p.length, rpc_p.type);
 }
 
 rpc_protocol recv_string(int socket) {
@@ -75,7 +89,7 @@ rpc_protocol recv_string(int socket) {
     char type[(sizeof(int))];
     rpc_protocol rpc_p;
     
-    // recieve string length
+    // recieve string length //TODO send int value
     long change = recv(socket, sizeText, sizeof(sizeText), 0);
     if (change < 0) {
         perror("rec length");
@@ -106,7 +120,7 @@ rpc_protocol recv_string(int socket) {
         if (change == 0) break;
     }
     buffer[recved] = '\0';
-    rpc_p.message = buffer; //TODO: confirm works
+    rpc_p.message = buffer;
     return rpc_p;
 }
 
@@ -114,19 +128,22 @@ rpc_protocol recv_string(int socket) {
 rpc_register_protocol create_register_protocol(rpc_protocol rpc_p) {
     rpc_register_protocol rpc_rp;
     rpc_rp.type = rpc_p.type;
-    
     int start = 0;
-    int end = HOSTNAMESIZE;
-    char *si = new char[end];
-    memcpy(si, rpc_p.message, end);
-    rpc_rp.server_identifier = si;
     
+    // Copy server id
+    int end = HOSTNAMESIZE;
+    rpc_rp.server_identifier = strdup((char*)rpc_p.message);
+    
+    // Copy port
     start += end;
     end = sizeof(int);
-    memcpy(&rpc_rp.port,(char*)rpc_p.message + start, end);
+    rpc_rp.port = *((char*)rpc_p.message + start);
+    
+    // Copy function name
     start += end;
     rpc_rp.name = strdup((char*)rpc_p.message + start);
     
+    // Copy args
     start += rpc_rp.name.length() + 1;
     rpc_rp.argTypes = intdup((int*)((char*)rpc_p.message + start));
     
@@ -137,26 +154,33 @@ rpc_protocol compile_register_protocol(rpc_register_protocol rpc_rp) {
     rpc_protocol rpc_p;
     rpc_p.type = rpc_rp.type;
     
-    
+    // find message length
     unsigned long size =
         HOSTNAMESIZE + sizeof(int) + sizeof(rpc_rp.name) +
         get_intstar_length(rpc_rp.argTypes) * sizeof(int);
+    rpc_p.length = size;
     
-    rpc_p.message = malloc(size); //TODO why must i malloc instead of new
+    // init message size
+    rpc_p.message = malloc(size);
     void* data = rpc_p.message;
-    memset(data, 0, size);
+    memset(data, 0, size); //clears memory
     
+    // Copy server id
     int pos = 0;
-    memcpy((char*)data + pos, rpc_rp.server_identifier.c_str(),rpc_rp.server_identifier.length());
-    pos += HOSTNAMESIZE;
-    memcpy((char*)data + pos, &rpc_rp.port, sizeof(int));
-    pos += sizeof(int);
-    memcpy((char*)data + pos, rpc_rp.name.c_str(),rpc_rp.name.length());
-    pos += rpc_rp.name.length() + 1;
+    copy_string((char*)data + pos, rpc_rp.server_identifier.c_str());
     
-    memcpy((char*)data + pos,
-           rpc_rp.argTypes,
-           get_intstar_length(rpc_rp.argTypes) * sizeof(int));
+    // Copy port
+    pos += HOSTNAMESIZE;
+    copy_int((char*)data + pos, &rpc_rp.port);
+    
+    // Copy function name
+    pos += sizeof(int);
+    copy_string((char*)data + pos, rpc_rp.name.c_str());
+    
+    // Copy args
+    pos += rpc_rp.name.length() + 1;
+    copy_int_array((char*)data + pos, rpc_rp.argTypes);
+    
     return rpc_p;
 }
 

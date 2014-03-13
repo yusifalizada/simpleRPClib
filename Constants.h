@@ -30,7 +30,7 @@ enum PROTOCOL_TYPE {
 
 // basic protocol
 struct rpc_protocol {
-    int length;
+    unsigned long length;
     PROTOCOL_TYPE type;
     void* message;
 };
