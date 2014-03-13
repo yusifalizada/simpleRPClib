@@ -10,7 +10,7 @@
 
 #define CASE(code) case code: return #code
 
-static std::string get_protocol_string(PROTOCOL_TYPE type) {
+std::string get_protocol_string(PROTOCOL_TYPE type) {
     switch (type)
     {
         CASE(REGISTER);

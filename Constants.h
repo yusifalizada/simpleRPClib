@@ -9,7 +9,7 @@
 #ifndef __simpleRPClib__Constants__
 #define __simpleRPClib__Constants__
 
-#define HOSTNAMESIZE 127 //255?
+#define HOSTNAMESIZE 128 //255?
 
 #include <iostream>
 #include <string>
@@ -28,13 +28,11 @@ enum PROTOCOL_TYPE {
     EXECUTE_FAILURE = 8,
     };
 
-
-
 // basic protocol
 struct rpc_protocol {
     int length;
     PROTOCOL_TYPE type;
-    std::string message;
+    void* message;
 };
 
 // Basic Response
@@ -43,7 +41,7 @@ struct rpc_protocol {
 //};
 
 struct rpc_base {
-    int type;
+    PROTOCOL_TYPE type;
 };
 
 // Server/Binder Messages
@@ -67,6 +65,8 @@ struct rpc_register_protocol : rpc_base {
 
 // Terminate Messages
 // TERMINATE
+
+std::string get_protocol_string(PROTOCOL_TYPE type);
 
 
 #endif /* defined(__simpleRPClib__Constants__) */

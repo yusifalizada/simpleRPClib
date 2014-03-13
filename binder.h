@@ -11,7 +11,4 @@
 
 #include <iostream>
 
-int main(int argc, char *argv[]) {
-}
-
 #endif /* defined(__simpleRPClib__binder__) */

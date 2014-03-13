@@ -16,4 +16,7 @@
 unsigned long send_string(int socket, std::string s, PROTOCOL_TYPE type);
 rpc_protocol recv_string(int socket);
 
+rpc_protocol compile_register_protocol(rpc_register_protocol rpc_rp);
+rpc_register_protocol create_register_protocol(rpc_protocol rcp_p);
+
 #endif /* defined(__Client__stringSocket__) */

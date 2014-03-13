@@ -22,12 +22,24 @@
 
 using namespace std;
 
-int * intdup(int const * src, size_t len)
+// gets the int array length
+int get_intstar_length(int const * istar){
+    int length = 0;
+    while (*(istar+length) != 0) {
+        length++;
+    }
+    return length;
+}
+
+// creates a duplicate int array
+int * intdup(int const * src, size_t len = -1)
 {
+    if (len == -1) len = get_intstar_length(src);
     int *p = new int[len];
     memcpy(p, src, len * sizeof(int));
     return p;
 }
+
 
 unsigned long send_string(int socket, string s, PROTOCOL_TYPE type) {
     int to_send = (int)s.size();
@@ -54,7 +66,8 @@ unsigned long send_string(int socket, string s, PROTOCOL_TYPE type) {
 }
 
 unsigned long send_protocol(int socket, rpc_protocol rpc_p){
-    return send_string(socket, rpc_p.message, rpc_p.type);
+    // TODO: not converted to c_str yet
+    return send_string(socket, "",rpc_p.type);//(string)rpc_p.message, rpc_p.type);
 }
 
 rpc_protocol recv_string(int socket) {
@@ -98,26 +111,55 @@ rpc_protocol recv_string(int socket) {
 }
 
 
-rpc_register_protocol create_register_protocol(rpc_protocol rcp_p) {
+rpc_register_protocol create_register_protocol(rpc_protocol rpc_p) {
     rpc_register_protocol rpc_rp;
-    rpc_rp.type = rcp_p.type;
-    size_t start = 0;
-    size_t end = HOSTNAMESIZE;
-    rpc_rp.server_identifier = rcp_p.message.substr(start, end);
+    rpc_rp.type = rpc_p.type;
+    
+    int start = 0;
+    int end = HOSTNAMESIZE;
+    char *si = new char[end];
+    memcpy(si, rpc_p.message, end);
+    rpc_rp.server_identifier = si;
     
     start += end;
     end = sizeof(int);
-    rpc_rp.port = atoi(rcp_p.message.substr(start,end).c_str());
-    
+    memcpy(&rpc_rp.port,(char*)rpc_p.message + start, end);
     start += end;
-    end = rcp_p.message.find('\0',start);
-    rpc_rp.name = rcp_p.message.substr(start,end+1);
+    rpc_rp.name = strdup((char*)rpc_p.message + start);
     
-    start += end+1;
-    rpc_rp.argTypes = intdup((int*)rcp_p.message.substr(start).c_str(),start - rcp_p.message.length());
+    start += rpc_rp.name.length() + 1;
+    rpc_rp.argTypes = intdup((int*)((char*)rpc_p.message + start));
+    
     return rpc_rp;
-
 }
+
+rpc_protocol compile_register_protocol(rpc_register_protocol rpc_rp) {
+    rpc_protocol rpc_p;
+    rpc_p.type = rpc_rp.type;
+    
+    
+    unsigned long size =
+        HOSTNAMESIZE + sizeof(int) + sizeof(rpc_rp.name) +
+        get_intstar_length(rpc_rp.argTypes) * sizeof(int);
+    
+    rpc_p.message = malloc(size); //TODO why must i malloc instead of new
+    void* data = rpc_p.message;
+    memset(data, 0, size);
+    
+    int pos = 0;
+    memcpy((char*)data + pos, rpc_rp.server_identifier.c_str(),rpc_rp.server_identifier.length());
+    pos += HOSTNAMESIZE;
+    memcpy((char*)data + pos, &rpc_rp.port, sizeof(int));
+    pos += sizeof(int);
+    memcpy((char*)data + pos, rpc_rp.name.c_str(),rpc_rp.name.length());
+    pos += rpc_rp.name.length() + 1;
+    
+    memcpy((char*)data + pos,
+           rpc_rp.argTypes,
+           get_intstar_length(rpc_rp.argTypes) * sizeof(int));
+    return rpc_p;
+}
+
 
 rpc_base recv_protocol(int socket) {
     rpc_protocol rcp_p = recv_string(socket);
