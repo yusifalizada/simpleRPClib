@@ -53,6 +53,22 @@ struct rpc_register_protocol : rpc_base {
     int* argTypes;
 };
 
+struct rpc_loc_request : rpc_base {
+    std::string name;
+    int* argTypes;
+};
+
+struct rpc_loc_success : rpc_base {
+    std::string server_identifier;
+    int port;
+};
+
+struct rpc_loc_failure : rpc_base {
+    std::string server_identifier;
+    int reasonCode;
+};
+
+
 // Client/Binder Messages
 // LOC_REQUEST, name, argTypes
 // LOC_SUCCESS, server_identifier, port
