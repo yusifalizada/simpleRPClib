@@ -22,6 +22,13 @@
 
 using namespace std;
 
+int * intdup(int const * src, size_t len)
+{
+    int *p = new int[len];
+    memcpy(p, src, len * sizeof(int));
+    return p;
+}
+
 unsigned long send_string(int socket, string s, PROTOCOL_TYPE type) {
     int to_send = (int)s.size();
     int int_type = type;
@@ -95,7 +102,7 @@ rpc_base recv_protocol(int socket) {
     switch (rcp_p.type) {
         case REGISTER:
             rpc_register_protocol rpc_rp;
-            //rpc_rp.type = rcp_p.type;
+            rpc_rp.type = rcp_p.type;
             size_t start = 0;
             size_t end = HOSTNAMESIZE;
             rpc_rp.server_identifier = rcp_p.message.substr(start, end);
@@ -109,16 +116,7 @@ rpc_base recv_protocol(int socket) {
             rpc_rp.name = rcp_p.message.substr(start,end+1);
             
             start += end+1;
-            rpc_rp.argTypes =
-            
-//            memcpy(frame->_register.hostname, src, HOSTNAME_MAX_SIZE);
-//            src += HOSTNAME_MAX_SIZE;
-//            memcpy(&frame->_register.port, src, sizeof(frame->_register.port));
-//            src += sizeof(frame->_register.port);
-//            frame->_register.name = strdup(src);
-//            src += strlen(src) + 1;
-//            frame->_register.arg_types = arg_types_dup(src);
-
+            rpc_rp.argTypes = intdup((int*)rcp_p.message.substr(start).c_str(),start - rcp_p.message.length());
             
             break;
     }
